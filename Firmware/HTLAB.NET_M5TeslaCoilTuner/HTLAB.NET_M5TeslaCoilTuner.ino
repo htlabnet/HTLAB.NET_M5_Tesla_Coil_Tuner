@@ -746,6 +746,8 @@ void setup() {
 
 
 void loop() {
+  static bool btnB_longPressed = false;
+  static uint32_t btnB_baseMs = 0;
 
   // Show Battery Status
   lcd_show_header_batt(false);
@@ -775,23 +777,30 @@ void loop() {
   }
 
   // Sub Button
-  if (M5.BtnB.wasPressed()) {
+  if (M5.BtnB.isPressed()) {
     last_time = millis();
-    execute_select(false);
-    if (executed) {
-      executed = false;
-      lcd_show_main(true);
+    // Long Press
+    if (millis() - btnB_baseMs > 1000 && !btnB_longPressed) {
+      btnB_longPressed = true;
+      execute_select(true);
+      lcd_show_footer();
+      sound_select(true);
     }
-    lcd_show_footer();
-    sound_select(false);
-  }
-
-  // Sub Button Long Press
-  if (M5.BtnB.wasReleasefor(1000)) {
-    last_time = millis();
-    execute_select(true);
-    lcd_show_footer();
-    sound_select(true);
+  } else {
+    btnB_baseMs = millis();
+    if (M5.BtnB.wasReleased()) {
+      // Short Press
+      if (!btnB_longPressed) {
+        execute_select(false);
+        if (executed) {
+          executed = false;
+          lcd_show_main(true);
+        }
+        lcd_show_footer();
+        sound_select(false);
+      }
+      btnB_longPressed = false;
+    }
   }
 
   // Auto Power Off
