@@ -488,13 +488,16 @@ void param_select(uint8_t select) {
 
 
 void lcd_init() {
-  M5.Lcd.begin();
+  #if defined (ARDUINO_M5Stick_C_Plus) || defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5STACK_Core2)
+    M5.Axp.SetLDO2(false);
+    M5.Lcd.begin();
+  #endif
+
   M5.Lcd.setRotation(LCD_ROT);
   M5.Lcd.fillScreen(LCD_BG_COLOR);
-  #if defined(ARDUINO_M5Stack_Core_ESP32)
 
-  #else
-  M5.Axp.ScreenBreath(10);
+  #if defined (ARDUINO_M5Stick_C_Plus) || defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5STACK_Core2)
+    M5.Axp.ScreenBreath(10);
   #endif
 }
 
@@ -689,8 +692,11 @@ void lcd_print_result(uint32_t freq, uint32_t freq_start, uint32_t freq_end) {
 void setup() {
 
   // Initialize System
-  M5.begin(false, true, true);
-  M5.Axp.SetLDO2(false);
+  #if defined (ARDUINO_M5Stick_C_Plus) || defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5STACK_Core2)
+    M5.begin(false, true, true);
+  #else
+    M5.begin();
+  #endif
   lcd_init();
   param_select(select_param);
 
@@ -725,7 +731,9 @@ void setup() {
   lcd_show_header_batt(false);
   lcd_show_main(true);
   lcd_show_footer();
-  M5.Axp.SetLDO2(true);
+  #if defined (ARDUINO_M5Stick_C_Plus) || defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5STACK_Core2)
+    M5.Axp.SetLDO2(true);
+  #endif
 
   // Auto Power Off
   last_time = millis();
