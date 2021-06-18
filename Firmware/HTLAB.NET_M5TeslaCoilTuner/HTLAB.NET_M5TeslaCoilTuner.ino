@@ -171,10 +171,10 @@ static double ledcChangeFrequency(uint8_t chan, double freq, uint8_t bit_num) {
 static void sound_startup() {
   #if defined(ARDUINO_M5Stick_C_Plus)
     #if USE_BEEP
-      M5.Beep.tone(2000);
-      delay(150);
       M5.Beep.tone(1000);
-      delay(150);
+      delay(120);
+      M5.Beep.tone(2000);
+      delay(120);
       M5.Beep.mute();
     #endif
   #endif
@@ -186,9 +186,9 @@ static void sound_shutdown() {
   #if defined(ARDUINO_M5Stick_C_Plus)
     #if USE_BEEP
       M5.Beep.tone(2000);
-      delay(150);
+      delay(120);
       M5.Beep.tone(1000);
-      delay(150);
+      delay(120);
       M5.Beep.mute();
     #endif
   #endif
