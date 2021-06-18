@@ -496,8 +496,10 @@ void lcd_init() {
   M5.Lcd.setRotation(LCD_ROT);
   M5.Lcd.fillScreen(LCD_BG_COLOR);
 
-  #if defined (ARDUINO_M5Stick_C_Plus) || defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5STACK_Core2)
+  #if defined (ARDUINO_M5Stick_C_Plus) || defined(ARDUINO_M5Stick_C)
     M5.Axp.ScreenBreath(10);
+  #elif defined(ARDUINO_M5STACK_Core2)
+    M5.Lcd.setBrightness(128);
   #endif
 }
 
