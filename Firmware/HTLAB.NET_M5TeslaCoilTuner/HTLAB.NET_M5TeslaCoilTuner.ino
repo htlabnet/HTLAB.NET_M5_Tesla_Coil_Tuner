@@ -329,6 +329,8 @@ void execute_measure() {
   uint16_t measure_max_voltage_center = -1;
   uint16_t result_diff_start;
   uint16_t result_diff_end;
+  uint16_t old_graph_x = 0;
+  uint32_t old_graph_y = 0;
 
   int32_t i = 0;
   for (uint32_t freq = param_start; freq <= param_max_step; freq = freq + param_step) {
@@ -368,9 +370,12 @@ void execute_measure() {
 
     // Show Graph
     lcd_graph_y += result[i];
+    if (i == 0) old_graph_y = lcd_graph_y;
     lcd_graph_px_cnt++;
     if (lcd_graph_px_cnt == lcd_graph_px_max_cnt) {
-      lcd_plot_graph(lcd_graph_x, lcd_graph_y / lcd_graph_px_max_cnt);
+      lcd_plot_graph2(old_graph_x, old_graph_y, lcd_graph_x, lcd_graph_y / lcd_graph_px_max_cnt);
+      old_graph_x = lcd_graph_x;
+      old_graph_y = lcd_graph_y / lcd_graph_px_max_cnt;
       lcd_graph_px_cnt = 0;
       lcd_graph_y = 0;
       lcd_graph_x++;
@@ -647,22 +652,30 @@ void lcd_print_hz(uint32_t freq) {
 
 
 
-void lcd_plot_graph(uint16_t x, uint32_t y) {
+void lcd_plot_graph1(uint16_t x, uint32_t y) {
   M5.Lcd.drawPixel(x, LCD_MAIN_OFFSET + LCD_MAIN_HEIGHT - (y / lcd_plot_y_divider) - 1, LCD_MAIN_GRAPH_COLOR);
+}
+
+
+
+void lcd_plot_graph2(uint16_t x0, uint32_t y0, uint16_t x1, uint32_t y1) {
+  M5.Lcd.drawLine(x0, LCD_MAIN_OFFSET + LCD_MAIN_HEIGHT - (y0 / lcd_plot_y_divider) - 1,
+                  x1, LCD_MAIN_OFFSET + LCD_MAIN_HEIGHT - (y1 / lcd_plot_y_divider) - 1,
+                  LCD_MAIN_GRAPH_COLOR);
 }
 
 
 
 void lcd_plot_line(uint16_t x, uint32_t y) {
   M5.Lcd.drawLine(x, LCD_MAIN_OFFSET, x, LCD_MAIN_OFFSET + LCD_MAIN_HEIGHT - 1, LCD_MAIN_GRAPH_LINE_COLOR);
-  lcd_plot_graph(x, y);
+  lcd_plot_graph1(x, y);
 }
 
 
 
 void lcd_plot_line_max(uint16_t x, uint32_t y) {
   M5.Lcd.drawLine(x, LCD_MAIN_OFFSET, x, LCD_MAIN_OFFSET + LCD_MAIN_HEIGHT - 1, LCD_MAIN_GRAPH_MAX_LINE_COLOR);
-  lcd_plot_graph(x, y);
+  lcd_plot_graph1(x, y);
 }
 
 
