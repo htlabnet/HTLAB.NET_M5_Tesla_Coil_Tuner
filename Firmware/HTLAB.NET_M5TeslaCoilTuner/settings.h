@@ -5,7 +5,7 @@
 
 
 // If Use "Board -> ESP32 Arduino -> M5Stick-C"
-#define USE_M5STICK_C_PLUS false
+#define USE_M5STICK_C_PLUS true
 
 // Measuring LED
 #define USE_LED true
