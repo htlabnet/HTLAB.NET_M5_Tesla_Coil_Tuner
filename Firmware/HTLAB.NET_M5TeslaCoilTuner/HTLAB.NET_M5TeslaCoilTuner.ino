@@ -184,10 +184,14 @@ static void sound_startup() {
 static void sound_shutdown() {
   #if defined(ARDUINO_M5Stick_C_Plus)
     #if USE_BEEP
-      M5.Beep.tone(2000);
-      delay(110);
-      M5.Beep.tone(1000);
-      delay(110);
+      M5.Beep.tone(415);
+      delay(260);
+      M5.Beep.tone(311);
+      delay(260);
+      M5.Beep.tone(207);
+      delay(260);
+      M5.Beep.tone(233);
+      delay(300);
       M5.Beep.mute();
     #endif
   #endif
