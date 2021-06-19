@@ -143,7 +143,6 @@ float batt_voltage_last;
 const uint16_t loop_cnt = 960;
 uint16_t result[loop_cnt];
 uint32_t result_freq[loop_cnt];
-int16_t result_diff[loop_cnt];
 bool executed = false;
 
 uint8_t select_param = 0;
@@ -322,13 +321,16 @@ void execute_measure() {
   const uint8_t lcd_graph_px_max_cnt = loop_cnt / LCD_WIDTH;
   uint8_t measure_step_cnt = 0;
   uint32_t measure_max_voltage = 0;
-  int16_t result_diff_plus_max = 0;
-  int16_t result_diff_minus_max = 0;
+  #if defined(MEAS_FRANGE_MAXDIFF)
+    int16_t result_diff[loop_cnt];
+    int16_t result_diff_plus_max = 0;
+    int16_t result_diff_minus_max = 0;
+  #endif
   uint16_t measure_max_voltage_start = -1;
   uint16_t measure_max_voltage_end = -1;
   uint16_t measure_max_voltage_center = -1;
-  uint16_t result_diff_start;
-  uint16_t result_diff_end;
+  uint16_t result_range_start;
+  uint16_t result_range_end;
   uint16_t old_graph_x = 0;
   uint32_t old_graph_y = 0;
 
@@ -348,25 +350,26 @@ void execute_measure() {
       measure_step_cnt = 0;
     }
 
-    // Record Diff
-    if (i == 0) {
-      result_diff[i] = 0;
-    } else {
-      result_diff[i] = result[i] - result[i - 1];
-    }
-
     // Record Max Voltage
     if (measure_max_voltage < result[i]) {
       measure_max_voltage = result[i];
     }
 
-    // Record Max Diff
-    if (result_diff_plus_max < result_diff[i]) {
-      result_diff_plus_max = result_diff[i];
-    }
-    if (result_diff_minus_max > result_diff[i]) {
-      result_diff_minus_max = result_diff[i];
-    }
+    #if defined(MEAS_FRANGE_MAXDIFF)
+      // Record Diff
+      if (i == 0) {
+        result_diff[i] = 0;
+      } else {
+        result_diff[i] = result[i] - result[i - 1];
+      }
+      // Record Max Diff
+      if (result_diff_plus_max < result_diff[i]) {
+        result_diff_plus_max = result_diff[i];
+      }
+      if (result_diff_minus_max > result_diff[i]) {
+        result_diff_minus_max = result_diff[i];
+      }
+    #endif
 
     // Show Graph
     lcd_graph_y += result[i];
@@ -399,24 +402,40 @@ void execute_measure() {
   }
   measure_max_voltage_center = measure_max_voltage_start + (measure_max_voltage_end - measure_max_voltage_start) / 2;
 
-  // Detect Max Diff
-  for(i = 0; i < loop_cnt; i++) {
-    if (result_diff[i] == result_diff_plus_max) {
-      result_diff_start = i;
-      break;
+  #if defined(MEAS_FRANGE_MAXDIFF)
+    // Detect Max Diff
+    for(i = 0; i < loop_cnt; i++) {
+      if (result_diff[i] == result_diff_plus_max) {
+        result_range_start = i;
+        break;
+      }
     }
-  }
-  for(i = loop_cnt - 1; i >= 0; i--) {
-    if (result_diff[i] == result_diff_minus_max) {
-      result_diff_end = i;
-      break;
+    for(i = loop_cnt - 1; i >= 0; i--) {
+      if (result_diff[i] == result_diff_minus_max) {
+        result_range_end = i;
+        break;
+      }
     }
-  }
+  #elif defined(MEAS_FRANGE_FWHM)
+    // Detect FWHM
+    for (i = 0; i < loop_cnt; i++) {
+      if (result[i] >= measure_max_voltage / 2) {
+        result_range_start = i;
+        break;
+      }
+    }
+    for(i = loop_cnt - 1; i >= 0; i--) {
+      if (result[i] >= measure_max_voltage / 2) {
+        result_range_end = i;
+        break;
+      }
+    }
+  #endif
 
   // Show Graph Line
   lcd_plot_line_max(measure_max_voltage_center / lcd_graph_px_max_cnt, result[measure_max_voltage_center]);
-  lcd_plot_line(result_diff_start / lcd_graph_px_max_cnt, result[result_diff_start]);
-  lcd_plot_line(result_diff_end / lcd_graph_px_max_cnt, result[result_diff_end]);
+  lcd_plot_line(result_range_start / lcd_graph_px_max_cnt, result[result_range_start]);
+  lcd_plot_line(result_range_end / lcd_graph_px_max_cnt, result[result_range_end]);
 
   // End
   measure_set_frequency(LEDC_CHANNEL, 0.0);
@@ -432,15 +451,15 @@ void execute_measure() {
     Serial.println(measure_max_voltage_center);
     Serial.print("Max Voltage End: ");
     Serial.println(measure_max_voltage_end);
-    Serial.print("result_diff_start: ");
-    Serial.println(result_diff_start);
-    Serial.print("result_diff_end: ");
-    Serial.println(result_diff_end);
+    Serial.print("result_range_start: ");
+    Serial.println(result_range_start);
+    Serial.print("result_range_end: ");
+    Serial.println(result_range_end);
   #endif
 
   if (param_pass <= 1) {
     delay(2000);
-    lcd_print_result(result_freq[measure_max_voltage_center], result_freq[result_diff_start], result_freq[result_diff_end]);
+    lcd_print_result(result_freq[measure_max_voltage_center], result_freq[result_range_start], result_freq[result_range_end]);
     param_select(select_param);
   } else {
     // pass

@@ -116,8 +116,9 @@ const uint32_t param[][5] = {
 #define LCD_RESULT_MAIN_TEXT_COLOR BLACK
 #define LCD_RESULT_SUB_TEXT_COLOR BLACK
 
-
-
+// Freq range select
+//#define MEAS_FRANGE_MAXDIFF
+#define MEAS_FRANGE_FWHM
 
 
 //#define TONE_PIN_CHANNEL 0 -> C Plus Beep PWM
